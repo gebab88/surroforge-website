@@ -15,20 +15,19 @@ landing/
 
 Kein Framework, kein Build-Schritt — Vercel serviert den Ordner direkt.
 
-**Variante A — CLI (aus diesem Ordner):**
+**Variante A — CLI (aus dem Repo-Wurzelordner):**
 
 ```bash
 npm i -g vercel      # falls noch nicht installiert
-cd landing
 vercel               # Preview-Deploy (fragt einmalig nach Login/Projekt)
 vercel --prod        # Produktions-Deploy
 ```
 
 **Variante B — Git + Vercel-Dashboard:**
 
-1. Ordner in ein Git-Repo legen und zu GitHub/GitLab pushen.
-2. Auf vercel.com „New Project" → Repo importieren.
-3. **Root Directory** auf `landing` setzen, Framework Preset = „Other". Deploy.
+1. Auf vercel.com „New Project" → dieses Repo (`surroforge-website`) importieren.
+2. **Root Directory** auf dem Standard (Repo-Wurzel) lassen, Framework Preset = „Other".
+3. Deploy — kein Build-Schritt nötig.
 
 ## Als A4-PDF drucken
 
