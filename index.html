@@ -347,12 +347,18 @@
 
     /* ================= PRINT — single A4 datasheet, light ================= */
     @media print {
-      @page { size: A4 portrait; margin: 12mm 13mm; }
+      @page { size: A4 portrait; margin: 11mm 13mm; }
 
-      html { scroll-behavior: auto; }
+      /* force a clean light document — the screen theme is dark (color-scheme:dark
+         paints the page canvas/margins black), so we reset it explicitly here */
+      html {
+        scroll-behavior: auto;
+        color-scheme: light;
+        background: #ffffff !important;
+      }
       body {
-        background: #fff !important;
-        color: #17202a;
+        background: #ffffff !important;
+        color: #2b3742;
         font-family: var(--font-body);
         font-size: 9pt;
         line-height: 1.36;
@@ -368,43 +374,69 @@
         filter: none !important;
       }
 
-      .print-sheet { display: block !important; color: #17202a; }
+      .print-sheet { display: block !important; color: #2b3742; }
+      /* neutralise the screen "section rhythm" (96px padding + top borders) */
+      .print-sheet section { padding: 0; position: static; border: 0; }
 
+      /* ---- masthead ---- */
       .ps-head {
-        display: flex; align-items: center; justify-content: space-between; gap: 10mm;
-        border-bottom: 1.4pt solid #17202a; padding-bottom: 3mm;
+        display: flex; align-items: flex-end; justify-content: space-between; gap: 10mm;
+        border-bottom: 1.6pt solid #17202a; padding-bottom: 2.6mm; margin-bottom: 3.4mm;
       }
-      .ps-brand { display: flex; align-items: center; gap: 3mm; font-family: var(--font-display); font-weight: 700; font-size: 16pt; letter-spacing: -0.01em; }
-      .ps-brand svg { width: 8mm; height: 8mm; }
-      .ps-brand b { color: #a86a12; }
-      .ps-tag { font-family: var(--font-mono); font-size: 7.4pt; color: #51606d; text-align: right; line-height: 1.4; }
+      .ps-brand { display: flex; align-items: center; gap: 3mm; font-family: var(--font-display); font-weight: 700; font-size: 17pt; letter-spacing: -0.015em; color: #17202a; line-height: 1; }
+      .ps-brand svg { width: 8.4mm; height: 8.4mm; }
+      .ps-brand b { color: #b26a0f; }
+      .ps-tag { font-family: var(--font-mono); font-size: 7.2pt; color: #55636f; text-align: right; line-height: 1.45; }
 
-      .ps-lead { font-size: 9.5pt; line-height: 1.34; margin: 3mm 0 2mm; max-width: 178mm; }
-      .ps-lead b { color: #0e77a8; }
+      /* ---- lead ---- */
+      .ps-lead { font-size: 9.8pt; line-height: 1.4; margin: 0 0 3.6mm; color: #2b3742; }
+      .ps-lead b { color: #0e77a8; font-weight: 600; }
 
-      .ps-block { break-inside: avoid; margin-bottom: 3mm; }
+      /* ---- key figures ---- */
+      .ps-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin: 0 0 4.4mm; }
+      .ps-stat { border: 0.7pt solid #dce1e7; border-left: 2.2pt solid #b26a0f; border-radius: 1.5pt; padding: 2.2mm 3mm 2.4mm; background: #faf9f6; break-inside: avoid; }
+      .ps-stat:nth-child(2) { border-left-color: #0e77a8; }
+      .ps-stat:nth-child(3) { border-left-color: #17845c; }
+      .ps-num { display: block; font-family: var(--font-display); font-weight: 700; font-size: 13pt; color: #17202a; letter-spacing: -0.01em; line-height: 1.02; }
+      .ps-lbl { display: block; font-size: 6.6pt; color: #55636f; line-height: 1.28; margin-top: 1.2mm; letter-spacing: 0.02em; }
 
+      /* ---- section headings ---- */
       .print-sheet h3 {
-        font-family: var(--font-display); font-size: 8.2pt; font-weight: 650;
-        text-transform: uppercase; letter-spacing: 0.12em; color: #0e77a8;
-        margin: 0 0 1.8mm; padding-bottom: 1mm; border-bottom: 0.6pt solid #d7dde3;
+        font-family: var(--font-display); font-size: 8.6pt; font-weight: 700;
+        text-transform: uppercase; letter-spacing: 0.1em; color: #17202a;
+        margin: 0 0 2.4mm; padding-bottom: 1.6mm; border-bottom: 0.8pt solid #17202a;
+        display: flex; align-items: center; gap: 2.2mm;
       }
+      .print-sheet h3::before { content: ""; width: 2.6mm; height: 2.6mm; border-radius: 0.6pt; background: #0e77a8; flex-shrink: 0; }
+      .ps-example h3::before { background: #b26a0f; }
 
-      .ps-feats { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1.4mm 8mm; }
-      .ps-feats li { font-size: 8.3pt; line-height: 1.25; padding-left: 5mm; position: relative; color: #33414d; break-inside: avoid; }
-      .ps-feats li::before { content: ""; position: absolute; left: 0.8mm; top: 1.3mm; width: 1.6mm; height: 1.6mm; border-radius: 50%; background: #1c845f; }
-      .ps-feats li b { color: #17202a; }
+      /* ---- funktionen ---- */
+      .ps-block { margin-bottom: 7.5mm; }
+      .ps-feats { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 2.2mm 9mm; }
+      .ps-feats li { font-size: 8.4pt; line-height: 1.3; padding-left: 4.6mm; position: relative; color: #33414d; break-inside: avoid; }
+      .ps-feats li::before { content: ""; position: absolute; left: 0.6mm; top: 1.4mm; width: 1.7mm; height: 1.7mm; border-radius: 50%; background: #17845c; }
+      .ps-feats li b { color: #17202a; font-weight: 600; }
 
-      .ps-example { margin-bottom: 3mm; break-inside: avoid; }
-      .ps-img { display: block; width: 60%; height: auto; margin: 0 auto; border: 0.6pt solid #d7dde3; border-radius: 2pt; }
-      .ps-cap { font-size: 7.2pt; color: #51606d; margin-top: 1.2mm; text-align: center; }
+      /* ---- beispiel + figures ---- */
+      .ps-example { margin-bottom: 0; }
+      .ps-note { font-size: 8pt; color: #33414d; margin: 0 0 2.6mm; line-height: 1.34; }
+      .ps-note b { color: #17202a; }
 
-      .ps-foot { margin-top: 3mm; padding-top: 2mm; border-top: 0.6pt solid #d7dde3; font-family: var(--font-mono); font-size: 7pt; color: #51606d; line-height: 1.35; }
-      .ps-author { display: flex; align-items: center; gap: 3.5mm; margin-bottom: 1.8mm; }
-      .ps-photo { width: 13mm; height: 13mm; border-radius: 50%; object-fit: cover; border: 0.6pt solid #c8d0d8; flex-shrink: 0; }
-      .ps-author .ps-name { font-family: var(--font-display); font-weight: 700; font-size: 9pt; color: #17202a; letter-spacing: -0.01em; }
-      .ps-author .ps-role { font-size: 7.6pt; color: #33414d; margin-top: 0.4mm; }
-      .ps-author .ps-gh { font-family: var(--font-mono); font-size: 7pt; color: #0e77a8; margin-top: 0.4mm; }
+      .ps-fig { margin: 0; break-inside: avoid; }
+      .ps-fig img { display: block; width: 100%; height: auto; border: 0.7pt solid #cbd3db; border-radius: 2.5pt; }
+      .ps-fig figcaption { font-size: 6.9pt; color: #55636f; margin-top: 1.4mm; line-height: 1.3; text-align: center; }
+      .ps-fig figcaption b { color: #17202a; font-weight: 600; }
+
+      .ps-fig-hero { width: 124mm; margin: 0 auto 4.8mm; }
+      .ps-fig-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; margin-top: 1mm; }
+
+      /* ---- footer ---- */
+      .ps-foot { margin-top: 6.5mm; padding-top: 3mm; border-top: 0.8pt solid #17202a; font-family: var(--font-mono); font-size: 7pt; color: #55636f; line-height: 1.4; break-inside: avoid; }
+      .ps-author { display: flex; align-items: center; gap: 3.8mm; margin-bottom: 2mm; }
+      .ps-photo { width: 13mm; height: 13mm; border-radius: 50%; object-fit: cover; border: 0.8pt solid #cbd3db; flex-shrink: 0; }
+      .ps-author .ps-name { font-family: var(--font-display); font-weight: 700; font-size: 10pt; color: #17202a; letter-spacing: -0.01em; }
+      .ps-author .ps-role { font-size: 7.8pt; color: #33414d; margin-top: 0.6mm; font-family: var(--font-body); }
+      .ps-author .ps-gh { font-family: var(--font-mono); font-size: 7pt; color: #0e77a8; margin-top: 0.6mm; }
       .ps-legal { color: #6b7883; }
     }
   </style>
@@ -422,7 +454,7 @@
           </g>
           <path d="M10 24 L15 13 L21 26 L27 15" fill="none" stroke="#17202a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
           <circle cx="10" cy="24" r="2.2" fill="#17202a"/><circle cx="15" cy="13" r="2.2" fill="#17202a"/>
-          <circle cx="21" cy="26" r="2.2" fill="#17202a"/><circle cx="27" cy="15" r="2.2" fill="#a86a12"/>
+          <circle cx="21" cy="26" r="2.2" fill="#17202a"/><circle cx="27" cy="15" r="2.2" fill="#b26a0f"/>
           <g stroke="#17202a" stroke-width="1.2" opacity="0.4" fill="none">
             <line x1="39" y1="40" x2="47" y2="43"/><line x1="39" y1="40" x2="47" y2="53"/>
             <line x1="39" y1="48" x2="47" y2="43"/><line x1="39" y1="48" x2="47" y2="53"/>
@@ -431,7 +463,7 @@
           </g>
           <circle cx="39" cy="40" r="1.8" fill="#17202a"/><circle cx="39" cy="48" r="1.8" fill="#17202a"/>
           <circle cx="39" cy="56" r="1.8" fill="#17202a"/><circle cx="47" cy="43" r="1.8" fill="#17202a"/>
-          <circle cx="47" cy="53" r="1.8" fill="#17202a"/><circle cx="56" cy="48" r="2.4" fill="#a86a12"/>
+          <circle cx="47" cy="53" r="1.8" fill="#17202a"/><circle cx="56" cy="48" r="2.4" fill="#b26a0f"/>
         </svg>
         <span>Surro<b>Forge</b></span>
       </div>
@@ -439,6 +471,21 @@
     </header>
 
     <p class="ps-lead">Von FEM- und CFD-Ergebnissen zum <b>validierten ML-Surrogat</b>. Eine solverübergreifende, in Python geschriebene CLI: vorhandene Simulationsdaten reproduzierbar einlesen, Methoden vergleichen, Validierung sichtbar machen.</p>
+
+    <div class="ps-stats">
+      <div class="ps-stat">
+        <span class="ps-num">≈&nbsp;600&nbsp;000×</span>
+        <span class="ps-lbl">schneller als die CFD-Rechnung (0,1&nbsp;ms statt ≈&nbsp;60&nbsp;s)</span>
+      </div>
+      <div class="ps-stat">
+        <span class="ps-num">R²&nbsp;=&nbsp;0,9988</span>
+        <span class="ps-lbl">Surrogat vs. CFD im Geschwindigkeitsfeld</span>
+      </div>
+      <div class="ps-stat">
+        <span class="ps-num">130</span>
+        <span class="ps-lbl">CFD-Rechnungen als Trainingsbasis</span>
+      </div>
+    </div>
 
     <section class="ps-block">
       <h3>Funktionen</h3>
@@ -453,10 +500,24 @@
     </section>
 
     <section class="ps-block ps-example">
-      <h3>Beispiel — OpenFOAM (CFD) · 130 Varianten am NACA-6412-Profil</h3>
-      <p style="font-size:7.9pt;color:#33414d;margin:0 0 2mm;line-height:1.3;"><b>Versuchsraum:</b> 26 Anstellwinkel (−5°…20°) × 5 Anströmgeschwindigkeiten (20–100 m/s) = 130 CFD-Rechnungen. Testfälle: α = 8°/70 m/s und α = 22°/30 m/s.</p>
-<img class="ps-img" src="assets/naca_velocity_cfd_surrogate_matrix.png" alt="2x2-Matrix der Geschwindigkeitsfelder: CFD (OpenFOAM) und Surrogat (POD + MLP) für α = 8°/70 m/s und α = 22°/30 m/s">
-      <div class="ps-cap">CFD vs. Surrogat (POD + MLP) · Testfälle α = 8°/70 m/s und α = 22°/30 m/s · ~600 000× schneller.</div>
+      <h3>Beispiel — OpenFOAM (CFD) · NACA-6412-Profil</h3>
+      <p class="ps-note"><b>Versuchsraum:</b> 26 Anstellwinkel (−5°…20°) × 5 Anströmgeschwindigkeiten (20–100 m/s) = 130 CFD-Rechnungen. Aus diesen Ergebnissen lernt SurroForge ein ML-Surrogat, das neue Kombinationen in Sekundenbruchteilen vorhersagt. Testfälle: α = 8°/70 m/s und α = 22°/30 m/s.</p>
+
+      <figure class="ps-fig ps-fig-hero">
+        <img src="assets/naca_velocity_cfd_surrogate_matrix.png" alt="2x2-Matrix der Geschwindigkeitsfelder: CFD (OpenFOAM) und Surrogat (POD + MLP) für α = 8°/70 m/s und α = 22°/30 m/s" width="1850" height="840">
+        <figcaption>Geschwindigkeitsfeld <b>|U|</b> — CFD vs. Surrogat (POD&nbsp;+&nbsp;MLP) für die zwei Testfälle.</figcaption>
+      </figure>
+
+      <div class="ps-fig-row">
+        <figure class="ps-fig">
+          <img src="assets/naca_cl_vs_aoa_all_speeds.png" alt="Auftriebsbeiwert über Anstellwinkel: CFD-Punkte gegen Surrogat-Kurven für fünf Anströmgeschwindigkeiten" width="1482" height="741">
+          <figcaption>Auftriebsbeiwert <b>c<sub>L</sub></b> — CFD-Punkte vs. Surrogat-Kurven.</figcaption>
+        </figure>
+        <figure class="ps-fig">
+          <img src="assets/naca_cd_vs_aoa_all_speeds.png" alt="Widerstandsbeiwert über Anstellwinkel: CFD-Punkte gegen Surrogat-Kurven für fünf Anströmgeschwindigkeiten" width="1505" height="741">
+          <figcaption>Widerstandsbeiwert <b>c<sub>D</sub></b> — CFD-Punkte vs. Surrogat-Kurven.</figcaption>
+        </figure>
+      </div>
     </section>
 
     <footer class="ps-foot">

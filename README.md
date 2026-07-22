@@ -33,14 +33,16 @@ vercel --prod        # Produktions-Deploy
 
 Die Seite hat ein eigenes Druck-Layout: im Browser `Strg/Cmd + P` → Ziel „Als PDF sichern",
 Format **A4 hoch**. Statt der dunklen Website erscheint dann eine **helle, einseitige
-Datenblatt-Fassung** (`@media print` / `@page A4` in `index.html`). Tipp: „Hintergrundgrafiken"
-im Druckdialog aktivieren, damit die Akzentfarben mitkommen. Ränder auf „Standard" lassen.
+Datenblatt-Fassung** (`@media print` / `@page A4` in `index.html`) mit Kennzahlen-Band,
+Funktionsübersicht, den drei CFD-/Surrogat-Diagrammen und Autorenzeile. Ränder auf „Standard"
+lassen; „Hintergrundgrafiken" sind optional (nur die dezenten Kennzahlen-Flächen hängen daran).
 
 ## Enthaltenes Beispiel
 
-Der Abschnitt „Beispiel" enthält den **Versuchsraum von Folie 5** der Präsentation:
-26 Anstellwinkel × 5 Anströmgeschwindigkeiten = 130 CFD-Rechnungen am NACA-6412-Profil,
-inklusive DoE-Gitter mit den Testfällen α = 8°/70 m/s und α = 22°/30 m/s.
+Der Abschnitt „Beispiel" zeigt das NACA-6412-Beispiel aus der Präsentation:
+26 Anstellwinkel × 5 Anströmgeschwindigkeiten = 130 CFD-Rechnungen (OpenFOAM), daraus ein
+ML-Surrogat (POD + MLP). Diagramme: Geschwindigkeitsfeld-Vergleich (Testfälle α = 8°/70 m/s
+und α = 22°/30 m/s) sowie die Beiwert-Kurven c_L und c_D über dem Anstellwinkel.
 
 ## Noch anzupassen
 
