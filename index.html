@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SurroForge — Von FEM/CFD-Ergebnissen zum validierten ML-Surrogat</title>
+  <meta name="description" content="SurroForge ist eine solverübergreifende CLI für effiziente Surrogate-Modellierung auf vorhandenen FEM-, CFD- und Experimentdaten. Reproduzierbar einlesen, Methoden vergleichen, Validierung sichtbar machen.">
+  <meta name="color-scheme" content="dark">
+
+  <!-- Open Graph / social -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="SurroForge — Surrogate Modeling, forged from your data">
+  <meta property="og:description" content="Solverübergreifende CLI für effiziente ML-Surrogate auf vorhandenen FEM-/CFD-Daten. Einlesen · Vergleichen · Validieren · Anwenden.">
+
+  <!-- Fonts: engineering trio. Fails gracefully to system fallbacks if the CDN is blocked. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      /* grounds — cool slate, biased toward the cyan accent */
+      --bg: #0b1017;
+      --bg-2: #0f1620;
+      --surface: #17212e;
+      --surface-2: #1f2b3a;
+      --line: rgba(230, 237, 243, 0.09);
+      --line-strong: rgba(230, 237, 243, 0.16);
+
+      /* text */
+      --ink: #e6edf3;
+      --ink-2: #aab6c2;
+      --ink-3: #8996a4;
+
+      /* semantic accents */
+      --cyan: #38bdf8;   /* speed / prediction / primary action */
+      --amber: #f0a94a;  /* the forge — training heat */
+      --green: #34d399;  /* validation */
+      --cyan-soft: rgba(56, 189, 248, 0.14);
+      --amber-soft: rgba(240, 169, 74, 0.14);
+      --green-soft: rgba(52, 211, 153, 0.14);
+
+      --shadow: 0 24px 60px -28px rgba(0, 0, 0, 0.75);
+      --radius: 16px;
+
+      --font-display: "Sora", "Segoe UI", system-ui, sans-serif;
+      --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", "Menlo", monospace;
+
+      --maxw: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 17px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: hidden;
+    }
+
+    /* faint blueprint grid — echoes the logo tile grid + the DOE motif */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      background:
+        linear-gradient(to right, var(--line) 1px, transparent 1px) 0 0 / 64px 64px,
+        linear-gradient(to bottom, var(--line) 1px, transparent 1px) 0 0 / 64px 64px;
+      opacity: 0.5;
+      -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 78%);
+              mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 30%, transparent 78%);
+      pointer-events: none;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      background:
+        radial-gradient(60% 50% at 78% -5%, rgba(56, 189, 248, 0.10), transparent 60%),
+        radial-gradient(55% 45% at 12% 8%, rgba(240, 169, 74, 0.06), transparent 60%);
+      pointer-events: none;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    ::selection { background: var(--cyan-soft); }
+
+    :focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 3px;
+      border-radius: 4px;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: var(--maxw);
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+
+    /* ---------- type scale ---------- */
+    h1, h2, h3 { font-family: var(--font-display); margin: 0; line-height: 1.08; letter-spacing: -0.015em; text-wrap: balance; }
+    h1 { font-size: clamp(2.35rem, 5.4vw, 3.7rem); font-weight: 700; }
+    h2 { font-size: clamp(1.8rem, 3.6vw, 2.6rem); font-weight: 650; }
+    h3 { font-size: 1.18rem; font-weight: 600; letter-spacing: -0.01em; }
+    p { margin: 0; }
+
+    .eyebrow {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin: 0 0 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 22px;
+      height: 1px;
+      background: var(--cyan);
+      opacity: 0.7;
+    }
+    .eyebrow.amber { color: var(--amber); }
+    .eyebrow.amber::before { background: var(--amber); }
+
+    .lead {
+      color: var(--ink-2);
+      font-size: 1.12rem;
+      max-width: 60ch;
+    }
+
+    .mono { font-family: var(--font-mono); }
+    .var { font-family: var(--font-mono); font-style: normal; color: var(--ink); }
+
+    /* ---------- nav ---------- */
+    header.nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(11, 16, 23, 0.72);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      height: 66px;
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-family: var(--font-display); font-weight: 650; font-size: 1.12rem; letter-spacing: -0.01em; }
+    .brand svg { width: 30px; height: 30px; display: block; }
+    .brand .forge { color: var(--amber); }
+    .nav-links { display: flex; gap: 26px; margin-left: auto; }
+    .nav-links a { color: var(--ink-2); font-size: 0.94rem; font-weight: 500; transition: color 0.18s; }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-cta { display: flex; align-items: center; gap: 12px; }
+
+    .status-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+      color: var(--amber);
+      background: var(--amber-soft);
+      border: 1px solid rgba(240, 169, 74, 0.28);
+      border-radius: 999px;
+      padding: 4px 11px;
+      white-space: nowrap;
+    }
+
+    /* ---------- buttons ---------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--font-body);
+      font-size: 0.96rem;
+      font-weight: 600;
+      padding: 12px 20px;
+      border-radius: 11px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.18s, border-color 0.18s, box-shadow 0.18s;
+      white-space: nowrap;
+    }
+    .btn svg { width: 17px; height: 17px; }
+    .btn-primary {
+      background: var(--cyan);
+      color: #06222f;
+      box-shadow: 0 10px 30px -12px rgba(56, 189, 248, 0.6);
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 34px -12px rgba(56, 189, 248, 0.75); }
+    .btn-ghost {
+      background: rgba(230, 237, 243, 0.03);
+      border-color: var(--line-strong);
+      color: var(--ink);
+    }
+    .btn-ghost:hover { background: rgba(230, 237, 243, 0.07); border-color: rgba(230, 237, 243, 0.3); }
+    .btn-sm { padding: 9px 15px; font-size: 0.9rem; }
+
+    /* ---------- section rhythm ---------- */
+    section { padding: 96px 0; position: relative; }
+    section + section { border-top: 1px solid var(--line); }
+
+    /* ---------- hero ---------- */
+    .hero { padding: 84px 0 88px; }
+    .hero-grid > div { max-width: 800px; }
+    .hero h1 { margin-bottom: 22px; }
+    .hero h1 .accent { color: var(--cyan); }
+    .hero-meta {
+      margin-top: 26px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 20px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      color: var(--ink-3);
+    }
+    .hero-meta span { display: inline-flex; align-items: center; gap: 8px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+
+    /* ---------- generic section head ---------- */
+    .sec-head { max-width: 62ch; margin-bottom: 52px; }
+    .sec-head h2 { margin-bottom: 18px; }
+    .sec-head p { color: var(--ink-2); font-size: 1.08rem; }
+
+    /* ---------- features ---------- */
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+    .feat {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 26px 24px 28px;
+      transition: border-color 0.2s, transform 0.2s, background 0.2s;
+    }
+    .feat:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+    .feat-ico {
+      width: 40px; height: 40px; border-radius: 10px;
+      display: grid; place-items: center; margin-bottom: 18px;
+    }
+    .feat-ico svg { width: 21px; height: 21px; }
+    .i-cyan { background: var(--cyan-soft); color: var(--cyan); }
+    .i-amber { background: var(--amber-soft); color: var(--amber); }
+    .i-green { background: var(--green-soft); color: var(--green); }
+    .feat h3 { margin-bottom: 10px; }
+    .feat p { color: var(--ink-2); font-size: 0.96rem; }
+
+    /* ---------- proof ---------- */
+    .proof-figs { display: grid; gap: 20px; }
+    .figs-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .fig {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .fig img { width: 100%; height: auto; display: block; background: var(--bg-2); }
+    .fig figcaption {
+      padding: 14px 18px;
+      font-size: 0.86rem;
+      color: var(--ink-2);
+      border-top: 1px solid var(--line);
+    }
+    .fig figcaption .var { color: var(--ink); }
+
+    /* ---------- autor ---------- */
+    .author-card {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 40px;
+      align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 38px 42px;
+      box-shadow: var(--shadow);
+    }
+    .author-photo {
+      width: 136px;
+      height: 136px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--line-strong);
+      background: var(--surface-2);
+    }
+    .author-body h2 { font-size: clamp(1.7rem, 3vw, 2.2rem); margin: 8px 0 4px; }
+    .author-role { color: var(--cyan); font-family: var(--font-mono); font-size: 0.9rem; letter-spacing: 0.01em; margin-bottom: 14px; }
+    .author-bio { color: var(--ink-2); max-width: 60ch; margin-bottom: 22px; }
+
+    /* ---------- footer ---------- */
+    footer.site {
+      border-top: 1px solid var(--line);
+      padding: 46px 0 54px;
+      background: var(--bg-2);
+    }
+    .foot-grid { display: flex; flex-wrap: wrap; gap: 28px; align-items: center; justify-content: space-between; }
+    .foot-brand { display: flex; align-items: center; gap: 11px; font-family: var(--font-display); font-weight: 650; }
+    .foot-brand svg { width: 26px; height: 26px; }
+    .foot-tag { color: var(--ink-3); font-family: var(--font-mono); font-size: 0.8rem; margin-top: 8px; }
+    .foot-links { display: flex; gap: 24px; }
+    .foot-links a { color: var(--ink-2); font-size: 0.9rem; }
+    .foot-links a:hover { color: var(--ink); }
+    .foot-note { width: 100%; margin-top: 28px; color: var(--ink-3); font-size: 0.82rem; }
+
+    /* ---------- reveal on scroll ---------- */
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.in { opacity: 1; transform: none; }
+
+    /* print-only datasheet — hidden on screen, shown for A4 (see @media print) */
+    .print-sheet { display: none; }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 940px) {
+      .feat-grid { grid-template-columns: repeat(2, 1fr); }
+      .figs-row { grid-template-columns: 1fr; }
+      .author-card { grid-template-columns: 1fr; gap: 22px; justify-items: start; padding: 30px 26px; }
+    }
+    @media (max-width: 680px) {
+      .nav-links { display: none; }
+      section { padding: 68px 0; }
+      .feat-grid { grid-template-columns: 1fr; }
+      .status-pill { display: none; }
+      body { font-size: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .btn, .feat { transition: none; }
+    }
+
+    /* ================= PRINT — single A4 datasheet, light ================= */
+    @media print {
+      @page { size: A4 portrait; margin: 12mm 13mm; }
+
+      html { scroll-behavior: auto; }
+      body {
+        background: #fff !important;
+        color: #17202a;
+        font-family: var(--font-body);
+        font-size: 9pt;
+        line-height: 1.36;
+      }
+      body::before, body::after { display: none !important; }
+      header.nav, main, footer.site { display: none !important; }
+
+      * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        box-shadow: none !important;
+        text-shadow: none !important;
+        filter: none !important;
+      }
+
+      .print-sheet { display: block !important; color: #17202a; }
+
+      .ps-head {
+        display: flex; align-items: center; justify-content: space-between; gap: 10mm;
+        border-bottom: 1.4pt solid #17202a; padding-bottom: 3mm;
+      }
+      .ps-brand { display: flex; align-items: center; gap: 3mm; font-family: var(--font-display); font-weight: 700; font-size: 16pt; letter-spacing: -0.01em; }
+      .ps-brand svg { width: 8mm; height: 8mm; }
+      .ps-brand b { color: #a86a12; }
+      .ps-tag { font-family: var(--font-mono); font-size: 7.4pt; color: #51606d; text-align: right; line-height: 1.4; }
+
+      .ps-lead { font-size: 9.5pt; line-height: 1.34; margin: 3mm 0 2mm; max-width: 178mm; }
+      .ps-lead b { color: #0e77a8; }
+
+      .ps-block { break-inside: avoid; margin-bottom: 3mm; }
+
+      .print-sheet h3 {
+        font-family: var(--font-display); font-size: 8.2pt; font-weight: 650;
+        text-transform: uppercase; letter-spacing: 0.12em; color: #0e77a8;
+        margin: 0 0 1.8mm; padding-bottom: 1mm; border-bottom: 0.6pt solid #d7dde3;
+      }
+
+      .ps-feats { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 1.4mm 8mm; }
+      .ps-feats li { font-size: 8.3pt; line-height: 1.25; padding-left: 5mm; position: relative; color: #33414d; break-inside: avoid; }
+      .ps-feats li::before { content: ""; position: absolute; left: 0.8mm; top: 1.3mm; width: 1.6mm; height: 1.6mm; border-radius: 50%; background: #1c845f; }
+      .ps-feats li b { color: #17202a; }
+
+      .ps-example { margin-bottom: 3mm; break-inside: avoid; }
+      .ps-img { display: block; width: 60%; height: auto; margin: 0 auto; border: 0.6pt solid #d7dde3; border-radius: 2pt; }
+      .ps-cap { font-size: 7.2pt; color: #51606d; margin-top: 1.2mm; text-align: center; }
+
+      .ps-foot { margin-top: 3mm; padding-top: 2mm; border-top: 0.6pt solid #d7dde3; font-family: var(--font-mono); font-size: 7pt; color: #51606d; line-height: 1.35; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ PRINT-ONLY A4 DATASHEET (hidden on screen) ============ -->
+  <div class="print-sheet">
+    <header class="ps-head">
+      <div class="ps-brand">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <g stroke="#17202a" stroke-opacity="0.3" stroke-width="1.6" fill="none">
+            <rect x="4" y="4" width="27" height="27" rx="5"/><rect x="33" y="4" width="27" height="27" rx="5"/>
+            <rect x="4" y="33" width="27" height="27" rx="5"/><rect x="33" y="33" width="27" height="27" rx="5"/>
+          </g>
+          <path d="M10 24 L15 13 L21 26 L27 15" fill="none" stroke="#17202a" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="10" cy="24" r="2.2" fill="#17202a"/><circle cx="15" cy="13" r="2.2" fill="#17202a"/>
+          <circle cx="21" cy="26" r="2.2" fill="#17202a"/><circle cx="27" cy="15" r="2.2" fill="#a86a12"/>
+          <g stroke="#17202a" stroke-width="1.2" opacity="0.4" fill="none">
+            <line x1="39" y1="40" x2="47" y2="43"/><line x1="39" y1="40" x2="47" y2="53"/>
+            <line x1="39" y1="48" x2="47" y2="43"/><line x1="39" y1="48" x2="47" y2="53"/>
+            <line x1="39" y1="56" x2="47" y2="43"/><line x1="39" y1="56" x2="47" y2="53"/>
+            <line x1="47" y1="43" x2="56" y2="48"/><line x1="47" y1="53" x2="56" y2="48"/>
+          </g>
+          <circle cx="39" cy="40" r="1.8" fill="#17202a"/><circle cx="39" cy="48" r="1.8" fill="#17202a"/>
+          <circle cx="39" cy="56" r="1.8" fill="#17202a"/><circle cx="47" cy="43" r="1.8" fill="#17202a"/>
+          <circle cx="47" cy="53" r="1.8" fill="#17202a"/><circle cx="56" cy="48" r="2.4" fill="#a86a12"/>
+        </svg>
+        <span>Surro<b>Forge</b></span>
+      </div>
+      <div class="ps-tag">Surrogate modeling — forged from your data<br>v0.1 · in Validierung</div>
+    </header>
+
+    <p class="ps-lead">Von FEM- und CFD-Ergebnissen zum <b>validierten ML-Surrogat</b>. Eine solverübergreifende, in Python geschriebene CLI: vorhandene Simulationsdaten reproduzierbar einlesen, Methoden vergleichen, Validierung sichtbar machen.</p>
+
+    <section class="ps-block">
+      <h3>Funktionen</h3>
+      <ul class="ps-feats">
+        <li><b>CLI-first</b> — skriptbar, reproduzierbar auf Workstation/Server/HPC.</li>
+        <li><b>Python-Integration</b> — direkt in Notebooks, Pipelines und MDAO.</li>
+        <li><b>Solverübergreifend</b> — arbeitet auf vorhandenen Ergebnissen.</li>
+        <li><b>Physik-basierte Surrogate</b> — reduzierte Ordnung &amp; modale Ansätze, hybrid mit ML.</li>
+        <li><b>Daten-basierte Surrogate</b> — SurroForge-Spezialisierung: NN, Gaussian Processes, RBF.</li>
+        <li><b>KI-Assistent mit Leitplanken</b> — Freigabe bleibt beim Ingenieur.</li>
+      </ul>
+    </section>
+
+    <section class="ps-block ps-example">
+      <h3>Beispiel — OpenFOAM (CFD) · 130 Varianten am NACA-6412-Profil</h3>
+      <p style="font-size:7.9pt;color:#33414d;margin:0 0 2mm;line-height:1.3;"><b>Versuchsraum:</b> 26 Anstellwinkel (−5°…20°) × 5 Anströmgeschwindigkeiten (20–100 m/s) = 130 CFD-Rechnungen. Testfälle: α = 8°/70 m/s und α = 22°/30 m/s.</p>
+<img class="ps-img" src="assets/naca_velocity_cfd_surrogate_matrix.png" alt="2x2-Matrix der Geschwindigkeitsfelder: CFD (OpenFOAM) und Surrogat (POD + MLP) für α = 8°/70 m/s und α = 22°/30 m/s">
+      <div class="ps-cap">CFD vs. Surrogat (POD + MLP) · Testfälle α = 8°/70 m/s und α = 22°/30 m/s · ~600 000× schneller.</div>
+    </section>
+
+    <footer class="ps-foot"><b style="color:#17202a;">Georg Babij</b> · Ingenieur für Luft- und Raumfahrttechnik · github.com/gebab88<br>© 2026 SurroForge · v0.1, in Validierung. ML-Surrogate beschleunigen Variantenstudien innerhalb eines geprüften Datenbereichs — sie ersetzen nicht die Physik.</footer>
+  </div>
+
+  <!-- ============ NAV ============ -->
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="#top" aria-label="SurroForge Startseite">
+        <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+          <g>
+            <rect x="4" y="4" width="27" height="27" rx="5" fill="none" stroke="#e6edf3" stroke-opacity="0.18" stroke-width="1.4"/>
+            <rect x="33" y="4" width="27" height="27" rx="5" fill="none" stroke="#e6edf3" stroke-opacity="0.18" stroke-width="1.4"/>
+            <rect x="4" y="33" width="27" height="27" rx="5" fill="none" stroke="#e6edf3" stroke-opacity="0.18" stroke-width="1.4"/>
+            <rect x="33" y="33" width="27" height="27" rx="5" fill="none" stroke="#e6edf3" stroke-opacity="0.18" stroke-width="1.4"/>
+          </g>
+          <g>
+            <path d="M8 21 C 13 11, 20 29, 28 16" fill="none" stroke="#f0a94a" stroke-width="1.4" opacity="0.55" stroke-linecap="round"/>
+            <path d="M10 24 L15 13 L21 26 L27 15" fill="none" stroke="#e6edf3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="10" cy="24" r="2" fill="#e6edf3"/>
+            <circle cx="15" cy="13" r="2" fill="#e6edf3"/>
+            <circle cx="21" cy="26" r="2" fill="#e6edf3"/>
+            <circle cx="27" cy="15" r="2" fill="#f0a94a"/>
+          </g>
+          <g>
+            <g stroke="#f0a94a" stroke-width="1.1" opacity="0.5" fill="none">
+              <line x1="39" y1="40" x2="47" y2="43"/><line x1="39" y1="40" x2="47" y2="53"/>
+              <line x1="39" y1="48" x2="47" y2="43"/><line x1="39" y1="48" x2="47" y2="53"/>
+              <line x1="39" y1="56" x2="47" y2="43"/><line x1="39" y1="56" x2="47" y2="53"/>
+              <line x1="47" y1="43" x2="56" y2="48"/><line x1="47" y1="53" x2="56" y2="48"/>
+            </g>
+            <circle cx="39" cy="40" r="1.8" fill="#e6edf3"/><circle cx="39" cy="48" r="1.8" fill="#e6edf3"/>
+            <circle cx="39" cy="56" r="1.8" fill="#e6edf3"/><circle cx="47" cy="43" r="1.8" fill="#e6edf3"/>
+            <circle cx="47" cy="53" r="1.8" fill="#e6edf3"/><circle cx="56" cy="48" r="2.3" fill="#f0a94a"/>
+          </g>
+        </svg>
+        <span>Surro<span class="forge">Forge</span></span>
+      </a>
+
+      <nav class="nav-links" aria-label="Hauptnavigation">
+        <a href="#funktionen">Funktionen</a>
+        <a href="#beispiel">Beispiel</a>
+      </nav>
+
+      <div class="nav-cta">
+        <span class="status-pill">v0.1 · in Validierung</span>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="wrap hero-grid">
+        <div>
+          <h1>Von FEM- &amp; CFD-Ergebnissen hin zu <span class="accent">Surrogaten</span></h1>
+          <p class="lead">
+            SurroForge ist eine solverübergreifende Kommandozeile für effiziente Surrogate-Modellierung
+            auf vorhandenen Simulations- und Experimentdaten. Reproduzierbar einlesen, Methoden
+            vergleichen, Validierung sichtbar machen — statt einer individuellen Skript- und Notebook-Kette.
+          </p>
+
+          <div class="hero-meta">
+            <span><span class="dot"></span> In Python geschrieben</span>
+            <span>CLI &amp; Python-API</span>
+            <span>solverübergreifend</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ FUNKTIONEN ============ -->
+    <section id="funktionen">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <p class="eyebrow">Funktionen</p>
+          <h2>Leichtgewichtig, solverübergreifend, CLI/Python-first.</h2>
+          <p>Kein GUI-Ballast im Kern. Skriptbar, automatisierbar und durch denselben Befehl reproduzierbar.</p>
+        </div>
+        <div class="feat-grid">
+          <div class="feat reveal">
+            <div class="feat-ico i-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></svg></div>
+            <h3>CLI-first</h3>
+            <p>Skriptbar und automatisierbar auf Workstation, Server und HPC. Derselbe Befehl liefert dasselbe Ergebnis.</p>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-ico i-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H6a2 2 0 0 0-2 2v3M15 3h3a2 2 0 0 1 2 2v3M9 21H6a2 2 0 0 1-2-2v-3M15 21h3a2 2 0 0 0 2-2v-3"/><circle cx="12" cy="12" r="2.4"/></svg></div>
+            <h3>Python-Integration</h3>
+            <p>Direkt einbettbar in Notebooks, Datenpipelines, eigene Anwendungen und MDAO-Workflows.</p>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-ico i-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></div>
+            <h3>Solverübergreifend</h3>
+            <p>Nicht an einen einzelnen Löser gebunden. SurroForge arbeitet auf den Ergebnissen, die schon da sind.</p>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-ico i-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v15a1 1 0 0 0 1 1h15"/><path d="M6 16c2.5 0 3.5-9 7-9s4.5 6 6 6"/></svg></div>
+            <h3>Physik-basierte Surrogate</h3>
+            <p>Physikalisch fundierte Modelle — reduzierte Ordnung und modale Ansätze — statt reiner Black-Box. Auf Wunsch hybrid mit ML kombiniert, für belastbare Vorhersagen auch bei wenigen Daten.</p>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-ico i-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="6" r="1.7"/><circle cx="5" cy="12" r="1.7"/><circle cx="5" cy="18" r="1.7"/><circle cx="13" cy="9" r="1.7"/><circle cx="13" cy="15" r="1.7"/><circle cx="20" cy="12" r="1.7"/><path d="M6.8 6.4 11.2 8.6M6.8 11.6 11.2 9.4M6.8 12.4 11.2 14.6M6.8 17.6 11.2 15.4M14.8 9.4 18.2 11.6M14.8 14.6 18.2 12.4"/></svg></div>
+            <h3>Daten-basierte Surrogate</h3>
+            <p>Rein aus Daten gelernt — neuronale Netze, Gaussian Processes, RBF. Genau hierauf ist SurroForge spezialisiert: ML-Surrogate sind der Kern des Werkzeugs.</p>
+          </div>
+          <div class="feat reveal">
+            <div class="feat-ico i-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="2"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="13" r="1"/><circle cx="15" cy="13" r="1"/></svg></div>
+            <h3>KI-Assistent mit Leitplanken</h3>
+            <p>Ein LLM assistiert bei Bedienung und Interpretation. Validierung, Gültigkeitsbereich und technische Freigabe bleiben beim Ingenieur.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BEISPIEL ============ -->
+    <section id="beispiel">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <p class="eyebrow amber">Beispiel · OpenFOAM (CFD)</p>
+          <h2><span style="color: var(--amber);">600 000×</span> schneller als die CFD-Rechnung.</h2>
+          <p>
+            130 Varianten am NACA-6412-Profil: 26 Anstellwinkel (−5° bis 20°) × 5 Anströmgeschwindigkeiten
+            (20–100 m/s) = 130 CFD-Rechnungen. Aus diesen vorhandenen Ergebnissen lernt SurroForge ein
+            ML-Surrogat, das neue Kombinationen in Sekundenbruchteilen vorhersagt — und sichtbar macht, wie gut es trifft.
+          </p>
+        </div>
+
+        <div class="proof-figs">
+          <figure class="fig reveal">
+            <img src="assets/naca_velocity_cfd_surrogate_matrix.png" alt="2x2-Matrix der Geschwindigkeitsfelder: Spalten CFD (OpenFOAM) und Surrogat (POD + MLP), Zeilen alpha 8 Grad bei 70 Meter pro Sekunde und alpha 22 Grad bei 30 Meter pro Sekunde" loading="lazy" width="1850" height="840">
+            <figcaption>Geschwindigkeitsfeld <span class="var">|U|</span> — CFD vs. Surrogat (<span class="var">POD&nbsp;+&nbsp;MLP</span>) für zwei Testfälle: <span class="var">α&nbsp;=&nbsp;8°/70&nbsp;m/s</span> und <span class="var">α&nbsp;=&nbsp;22°/30&nbsp;m/s</span>. ~600&nbsp;000× schneller.</figcaption>
+          </figure>
+          <div class="figs-row">
+            <figure class="fig reveal">
+              <img src="assets/naca_cl_vs_aoa_all_speeds.png" alt="Auftriebsbeiwert über Anstellwinkel: CFD-Punkte gegen Surrogat-Kurven für fünf Anströmgeschwindigkeiten" loading="lazy" width="1482" height="741">
+              <figcaption>Auftriebsbeiwert <span class="var">c_L</span>: CFD-Punkte vs. Surrogat-Kurven über fünf Geschwindigkeiten.</figcaption>
+            </figure>
+            <figure class="fig reveal">
+              <img src="assets/naca_cd_vs_aoa_all_speeds.png" alt="Widerstandsbeiwert über Anstellwinkel: CFD-Punkte gegen Surrogat-Kurven für fünf Anströmgeschwindigkeiten" loading="lazy" width="1505" height="741">
+              <figcaption>Widerstandsbeiwert <span class="var">c_D</span>: CFD-Punkte vs. Surrogat-Kurven über fünf Geschwindigkeiten.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ AUTOR ============ -->
+    <section id="autor">
+      <div class="wrap">
+        <div class="author-card reveal">
+          <img class="author-photo" src="assets/georg-babij.png" alt="Porträtfoto von Georg Babij" width="280" height="280" loading="lazy">
+          <div class="author-body">
+            <p class="eyebrow">Wer dahintersteht</p>
+            <h2>Georg Babij</h2>
+            <p class="author-role">Ingenieur für Luft- und Raumfahrttechnik</p>
+            <p class="author-bio">
+              SurroForge entsteht aus der Praxis: dem Wunsch, vorhandene FEM- und CFD-Ergebnisse
+              effizienter weiterzunutzen und Surrogate-Modelle nachvollziehbar zu validieren —
+              statt sie in Einzelskripten und Notebooks verpuffen zu lassen.
+            </p>
+            <a class="btn btn-ghost" href="https://github.com/gebab88" target="_blank" rel="noreferrer">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.42c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.53-1.34-1.3-1.7-1.3-1.7-1.06-.72.08-.71.08-.71 1.17.09 1.79 1.2 1.79 1.2 1.04 1.78 2.73 1.27 3.4.97.1-.75.4-1.27.73-1.56-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.8 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.24 2.76.12 3.05.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+              github.com/gebab88
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site">
+    <div class="wrap">
+      <div class="foot-grid">
+        <div>
+          <div class="foot-brand">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <g>
+                <rect x="4" y="4" width="27" height="27" rx="5" fill="none" stroke="#e6edf3" stroke-opacity="0.18" stroke-width="1.4"/>
+                <rect x="33" y="4" width="27" height="27" rx="5" fill="none" stroke="#e6edf3" stroke-opacity="0.18" stroke-width="1.4"/>
+                <rect x="4" y="33" width="27" height="27" rx="5" fill="none" stroke="#e6edf3" stroke-opacity="0.18" stroke-width="1.4"/>
+                <rect x="33" y="33" width="27" height="27" rx="5" fill="none" stroke="#e6edf3" stroke-opacity="0.18" stroke-width="1.4"/>
+              </g>
+              <g>
+                <path d="M10 24 L15 13 L21 26 L27 15" fill="none" stroke="#e6edf3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="27" cy="15" r="2" fill="#f0a94a"/>
+              </g>
+              <circle cx="56" cy="48" r="2.3" fill="#f0a94a"/>
+            </svg>
+            <span>Surro<span style="color:var(--amber)">Forge</span></span>
+          </div>
+          <p class="foot-tag">Surrogate modeling — forged from your data.</p>
+        </div>
+        <nav class="foot-links" aria-label="Fußzeile">
+          <a href="#funktionen">Funktionen</a>
+          <a href="#beispiel">Beispiel</a>
+          <a href="#">Dokumentation</a>
+        </nav>
+      </div>
+      <p class="foot-note">© 2026 SurroForge · v0.1, in Validierung. ML-Surrogate beschleunigen Variantenstudien innerhalb eines geprüften Datenbereichs — sie ersetzen nicht die Physik.</p>
+    </div>
+  </footer>
+
+  <script>
+    // Scroll reveal — progressive enhancement only.
+    (function () {
+      var els = document.querySelectorAll('.reveal');
+      if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        els.forEach(function (el) { el.classList.add('in'); });
+        return;
+      }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+      els.forEach(function (el) { io.observe(el); });
+    })();
+  </script>
+</body>
+</html>

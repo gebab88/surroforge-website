@@ -1,0 +1,9 @@
+# Claude artifact preview (derived, not needed for deployment)
+preview.html
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel
