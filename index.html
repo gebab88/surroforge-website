@@ -400,6 +400,12 @@
       .ps-cap { font-size: 7.2pt; color: #51606d; margin-top: 1.2mm; text-align: center; }
 
       .ps-foot { margin-top: 3mm; padding-top: 2mm; border-top: 0.6pt solid #d7dde3; font-family: var(--font-mono); font-size: 7pt; color: #51606d; line-height: 1.35; }
+      .ps-author { display: flex; align-items: center; gap: 3.5mm; margin-bottom: 1.8mm; }
+      .ps-photo { width: 13mm; height: 13mm; border-radius: 50%; object-fit: cover; border: 0.6pt solid #c8d0d8; flex-shrink: 0; }
+      .ps-author .ps-name { font-family: var(--font-display); font-weight: 700; font-size: 9pt; color: #17202a; letter-spacing: -0.01em; }
+      .ps-author .ps-role { font-size: 7.6pt; color: #33414d; margin-top: 0.4mm; }
+      .ps-author .ps-gh { font-family: var(--font-mono); font-size: 7pt; color: #0e77a8; margin-top: 0.4mm; }
+      .ps-legal { color: #6b7883; }
     }
   </style>
 </head>
@@ -453,7 +459,17 @@
       <div class="ps-cap">CFD vs. Surrogat (POD + MLP) · Testfälle α = 8°/70 m/s und α = 22°/30 m/s · ~600 000× schneller.</div>
     </section>
 
-    <footer class="ps-foot"><b style="color:#17202a;">Georg Babij</b> · Ingenieur für Luft- und Raumfahrttechnik · github.com/gebab88<br>© 2026 SurroForge · v0.1, in Validierung. ML-Surrogate beschleunigen Variantenstudien innerhalb eines geprüften Datenbereichs — sie ersetzen nicht die Physik.</footer>
+    <footer class="ps-foot">
+      <div class="ps-author">
+        <img class="ps-photo" src="assets/georg-babij.png" alt="Porträtfoto von Georg Babij">
+        <div>
+          <div class="ps-name">Georg Babij</div>
+          <div class="ps-role">Ingenieur für Luft- und Raumfahrttechnik</div>
+          <div class="ps-gh">github.com/gebab88</div>
+        </div>
+      </div>
+      <div class="ps-legal">© 2026 SurroForge · v0.1, in Validierung. ML-Surrogate beschleunigen Variantenstudien innerhalb eines geprüften Datenbereichs — sie ersetzen nicht die Physik.</div>
+    </footer>
   </div>
 
   <!-- ============ NAV ============ -->
