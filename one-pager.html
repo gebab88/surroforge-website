@@ -467,21 +467,10 @@
         </svg>
         <span>Surro<b>Forge</b></span>
       </div>
-      <div class="ps-tag">Surrogate modeling — forged from your data<br>v0.1 · in Validierung</div>
+      <div class="ps-tag">Surrogate modeling — forged from your data</div>
     </header>
 
     <p class="ps-lead">Von FEM- und CFD-Ergebnissen zum <b>validierten ML-Surrogat</b>. Eine solverübergreifende, in Python geschriebene CLI: vorhandene Simulationsdaten reproduzierbar einlesen, Methoden vergleichen, Validierung sichtbar machen.</p>
-
-    <div class="ps-stats">
-      <div class="ps-stat">
-        <span class="ps-num">≈&nbsp;600&nbsp;000×</span>
-        <span class="ps-lbl">schneller als die CFD-Rechnung (0,1&nbsp;ms statt ≈&nbsp;60&nbsp;s)</span>
-      </div>
-      <div class="ps-stat">
-        <span class="ps-num">130</span>
-        <span class="ps-lbl">CFD-Rechnungen als Trainingsbasis</span>
-      </div>
-    </div>
 
     <section class="ps-block">
       <h3>Funktionen</h3>
@@ -497,6 +486,18 @@
 
     <section class="ps-block ps-example">
       <h3>Beispiel — OpenFOAM (CFD) · Flügelprofil</h3>
+
+      <div class="ps-stats">
+        <div class="ps-stat">
+          <span class="ps-num">≈&nbsp;600&nbsp;000×</span>
+          <span class="ps-lbl">schneller als die CFD-Rechnung (0,1&nbsp;ms statt ≈&nbsp;60&nbsp;s)</span>
+        </div>
+        <div class="ps-stat">
+          <span class="ps-num">130</span>
+          <span class="ps-lbl">CFD-Rechnungen als Trainingsbasis</span>
+        </div>
+      </div>
+
       <p class="ps-note"><b>Versuchsraum:</b> 26 Anstellwinkel (−5°…20°) × 5 Anströmgeschwindigkeiten (20–100 m/s) = 130 CFD-Rechnungen. Aus diesen Ergebnissen lernt SurroForge ein ML-Surrogat, das neue Kombinationen in Sekundenbruchteilen vorhersagt. Testfälle: α = 8°/70 m/s und α = 22°/30 m/s.</p>
 
       <figure class="ps-fig ps-fig-hero">
