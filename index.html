@@ -393,7 +393,7 @@
       .ps-lead b { color: #0e77a8; font-weight: 600; }
 
       /* ---- key figures ---- */
-      .ps-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin: 0 0 4.4mm; }
+      .ps-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; margin: 0 0 4.4mm; }
       .ps-stat { border: 0.7pt solid #dce1e7; border-left: 2.2pt solid #b26a0f; border-radius: 1.5pt; padding: 2.2mm 3mm 2.4mm; background: #faf9f6; break-inside: avoid; }
       .ps-stat:nth-child(2) { border-left-color: #0e77a8; }
       .ps-stat:nth-child(3) { border-left-color: #17845c; }
@@ -478,10 +478,6 @@
         <span class="ps-lbl">schneller als die CFD-Rechnung (0,1&nbsp;ms statt ≈&nbsp;60&nbsp;s)</span>
       </div>
       <div class="ps-stat">
-        <span class="ps-num">R²&nbsp;=&nbsp;0,9988</span>
-        <span class="ps-lbl">Surrogat vs. CFD im Geschwindigkeitsfeld</span>
-      </div>
-      <div class="ps-stat">
         <span class="ps-num">130</span>
         <span class="ps-lbl">CFD-Rechnungen als Trainingsbasis</span>
       </div>
@@ -500,7 +496,7 @@
     </section>
 
     <section class="ps-block ps-example">
-      <h3>Beispiel — OpenFOAM (CFD) · NACA-6412-Profil</h3>
+      <h3>Beispiel — OpenFOAM (CFD) · Flügelprofil</h3>
       <p class="ps-note"><b>Versuchsraum:</b> 26 Anstellwinkel (−5°…20°) × 5 Anströmgeschwindigkeiten (20–100 m/s) = 130 CFD-Rechnungen. Aus diesen Ergebnissen lernt SurroForge ein ML-Surrogat, das neue Kombinationen in Sekundenbruchteilen vorhersagt. Testfälle: α = 8°/70 m/s und α = 22°/30 m/s.</p>
 
       <figure class="ps-fig ps-fig-hero">
@@ -570,13 +566,13 @@
       <nav class="nav-links" aria-label="Hauptnavigation">
         <a href="#funktionen">Funktionen</a>
         <a href="#beispiel">Beispiel</a>
-        <a href="datenblatt.html">Datenblatt</a>
+        <a href="one-pager.html">One-Pager</a>
       </nav>
 
       <div class="nav-cta">
-        <a class="btn btn-primary btn-sm" href="datenblatt.html">
+        <a class="btn btn-primary btn-sm" href="one-pager.html">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>
-          Datenblatt (A4/PDF)
+          One-Pager (A4/PDF)
         </a>
         <span class="status-pill">v0.1 · in Validierung</span>
       </div>
@@ -656,7 +652,7 @@
           <p class="eyebrow amber">Beispiel · OpenFOAM (CFD)</p>
           <h2><span style="color: var(--amber);">600 000×</span> schneller als die CFD-Rechnung.</h2>
           <p>
-            130 Varianten am NACA-6412-Profil: 26 Anstellwinkel (−5° bis 20°) × 5 Anströmgeschwindigkeiten
+            130 Varianten an einem Flügelprofil: 26 Anstellwinkel (−5° bis 20°) × 5 Anströmgeschwindigkeiten
             (20–100 m/s) = 130 CFD-Rechnungen. Aus diesen vorhandenen Ergebnissen lernt SurroForge ein
             ML-Surrogat, das neue Kombinationen in Sekundenbruchteilen vorhersagt — und sichtbar macht, wie gut es trifft.
           </p>
@@ -732,8 +728,8 @@
         <nav class="foot-links" aria-label="Fußzeile">
           <a href="#funktionen">Funktionen</a>
           <a href="#beispiel">Beispiel</a>
-          <a href="datenblatt.html">Datenblatt (A4)</a>
-          <a href="datenblatt.pdf" download>PDF</a>
+          <a href="one-pager.html">One-Pager (A4)</a>
+          <a href="one-pager.pdf" download>PDF</a>
         </nav>
       </div>
       <p class="foot-note">© 2026 SurroForge · v0.1, in Validierung. ML-Surrogate beschleunigen Variantenstudien innerhalb eines geprüften Datenbereichs — sie ersetzen nicht die Physik.</p>

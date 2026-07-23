@@ -10,10 +10,10 @@
       ]
     },
     {
-      "source": "/datenblatt.pdf",
+      "source": "/one-pager.pdf",
       "headers": [
         { "key": "Content-Type", "value": "application/pdf" },
-        { "key": "Content-Disposition", "value": "inline; filename=\"SurroForge-Datenblatt.pdf\"" },
+        { "key": "Content-Disposition", "value": "inline; filename=\"SurroForge-One-Pager.pdf\"" },
         { "key": "Cache-Control", "value": "public, max-age=3600, must-revalidate" }
       ]
     },

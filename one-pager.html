@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
-  <title>SurroForge — Datenblatt (A4)</title>
-  <meta name="description" content="SurroForge Datenblatt (DIN A4): solverübergreifende CLI für ML-Surrogate auf FEM-/CFD-Daten. NACA-6412-Beispiel, Kennzahlen und Validierung auf einer Seite.">
+  <title>SurroForge — One-Pager (A4)</title>
+  <meta name="description" content="SurroForge One-Pager (DIN A4): solverübergreifende CLI für ML-Surrogate auf FEM-/CFD-Daten. Flügelprofil-Beispiel, Kennzahlen und Validierung auf einer Seite.">
   <meta name="robots" content="index,follow">
   <style>
 /* cyrillic-ext */
@@ -371,7 +371,7 @@
     .ps-lead b { color: #0e77a8; font-weight: 600; }
 
     /* ---- key figures ---- */
-    .ps-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4mm; margin: 0 0 4.4mm; }
+    .ps-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4mm; margin: 0 0 4.4mm; }
     .ps-stat { border: 0.7pt solid #dce1e7; border-left: 2.2pt solid #b26a0f; border-radius: 1.5pt; padding: 2.2mm 3mm 2.4mm; background: #faf9f6; }
     .ps-stat:nth-child(2) { border-left-color: #0e77a8; }
     .ps-stat:nth-child(3) { border-left-color: #17845c; }
@@ -433,7 +433,7 @@
 </head>
 <body>
   <div class="toolbar">
-    <a class="tb-btn tb-primary" href="datenblatt.pdf" download>
+    <a class="tb-btn tb-primary" href="one-pager.pdf" download>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
       PDF herunterladen
     </a>
@@ -478,10 +478,6 @@
         <span class="ps-lbl">schneller als die CFD-Rechnung (0,1&nbsp;ms statt ≈&nbsp;60&nbsp;s)</span>
       </div>
       <div class="ps-stat">
-        <span class="ps-num">R²&nbsp;=&nbsp;0,9988</span>
-        <span class="ps-lbl">Surrogat vs. CFD im Geschwindigkeitsfeld</span>
-      </div>
-      <div class="ps-stat">
         <span class="ps-num">130</span>
         <span class="ps-lbl">CFD-Rechnungen als Trainingsbasis</span>
       </div>
@@ -500,7 +496,7 @@
     </section>
 
     <section class="ps-block ps-example">
-      <h3>Beispiel — OpenFOAM (CFD) · NACA-6412-Profil</h3>
+      <h3>Beispiel — OpenFOAM (CFD) · Flügelprofil</h3>
       <p class="ps-note"><b>Versuchsraum:</b> 26 Anstellwinkel (−5°…20°) × 5 Anströmgeschwindigkeiten (20–100 m/s) = 130 CFD-Rechnungen. Aus diesen Ergebnissen lernt SurroForge ein ML-Surrogat, das neue Kombinationen in Sekundenbruchteilen vorhersagt. Testfälle: α = 8°/70 m/s und α = 22°/30 m/s.</p>
 
       <figure class="ps-fig ps-fig-hero">

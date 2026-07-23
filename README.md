@@ -6,8 +6,8 @@ Schriften kommen über Google Fonts (mit System-Fallback), Bilder liegen unter `
 ```
 landing/
 ├── index.html       # die komplette Landing-Page
-├── datenblatt.html  # eigenständige DIN-A4-Seite (self-contained, Fonts + Bilder eingebettet)
-├── datenblatt.pdf   # daraus vorab gerendertes A4-PDF (das „fertige PDF")
+├── one-pager.html  # eigenständige DIN-A4-Seite (self-contained, Fonts + Bilder eingebettet)
+├── one-pager.pdf   # daraus vorab gerendertes A4-PDF (das „fertige PDF")
 ├── assets/          # die referenzierten CFD-/Koeffizienten-Bilder
 ├── vercel.json      # Cache-/Sicherheits-Header + PDF-Header
 └── README.md
@@ -31,25 +31,25 @@ vercel --prod        # Produktions-Deploy
 2. **Root Directory** auf dem Standard (Repo-Wurzel) lassen, Framework Preset = „Other".
 3. Deploy — kein Build-Schritt nötig.
 
-## Das A4-Datenblatt (`datenblatt.html` + `datenblatt.pdf`)
+## Der A4-One-Pager (`one-pager.html` + `one-pager.pdf`)
 
 Der komplette Inhalt der Landing-Page als **eigenständige DIN-A4-Seite** — nach dem Deploy erreichbar
-unter `/datenblatt` (bzw. `datenblatt.html`) und direkt aus der Seite verlinkt (Navigation + Fußzeile).
+unter `/one-pager` (bzw. `one-pager.html`) und direkt aus der Seite verlinkt (Navigation + Fußzeile).
 
-- **`datenblatt.html`** ist **vollständig self-contained**: die Schriften (Sora, IBM Plex Sans/Mono)
+- **`one-pager.html`** ist **vollständig self-contained**: die Schriften (Sora, IBM Plex Sans/Mono)
   **und** alle Bilder sind als base64 eingebettet — **keine CDN-/Netzwerk-Abhängigkeit**, funktioniert
   offline und identisch auf jedem Host. Am Bildschirm ein A4-Blatt auf grauem Hintergrund mit
   Werkzeugleiste (*PDF herunterladen · Drucken/Als PDF speichern · Zur Website*); beim Drucken exakt
   **eine A4-Seite** (Werkzeugleiste wird ausgeblendet, `@page A4`).
-- **`datenblatt.pdf`** ist das daraus **vorab gerenderte PDF** (Headless-Chromium, mit den echten
+- **`one-pager.pdf`** ist das daraus **vorab gerenderte PDF** (Headless-Chromium, mit den echten
   Markenschriften) — das „fertige PDF" zum Verschicken. Verifiziert als **genau eine A4-Seite**.
 
 Die dunkle Landing-Page (`index.html`) hat zusätzlich weiterhin ein eigenes `@media print`-Layout —
-`Strg/Cmd + P` dort liefert dasselbe helle Datenblatt.
+`Strg/Cmd + P` dort liefert denselben hellen One-Pager.
 
-### `datenblatt.pdf` neu erzeugen
+### `one-pager.pdf` neu erzeugen
 
-Wenn sich `datenblatt.html` ändert, das PDF mit Headless-Chromium neu rendern (Beispiel):
+Wenn sich `one-pager.html` ändert, das PDF mit Headless-Chromium neu rendern (Beispiel):
 
 ```bash
 python -m playwright install chromium   # einmalig
@@ -58,9 +58,9 @@ import asyncio; from playwright.async_api import async_playwright
 async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(); pg = await b.new_page()
-        await pg.goto("file://<ABSOLUTER-PFAD>/datenblatt.html", wait_until="load")
+        await pg.goto("file://<ABSOLUTER-PFAD>/one-pager.html", wait_until="load")
         await pg.evaluate("async () => { await document.fonts.ready; }")
-        await pg.pdf(path="datenblatt.pdf", prefer_css_page_size=True, print_background=True)
+        await pg.pdf(path="one-pager.pdf", prefer_css_page_size=True, print_background=True)
         await b.close()
 asyncio.run(main())
 PY
@@ -68,7 +68,7 @@ PY
 
 ## Enthaltenes Beispiel
 
-Der Abschnitt „Beispiel" zeigt das NACA-6412-Beispiel aus der Präsentation:
+Der Abschnitt „Beispiel" zeigt das Flügelprofil-Beispiel aus der Präsentation:
 26 Anstellwinkel × 5 Anströmgeschwindigkeiten = 130 CFD-Rechnungen (OpenFOAM), daraus ein
 ML-Surrogat (POD + MLP). Diagramme: Geschwindigkeitsfeld-Vergleich (Testfälle α = 8°/70 m/s
 und α = 22°/30 m/s) sowie die Beiwert-Kurven c_L und c_D über dem Anstellwinkel.
