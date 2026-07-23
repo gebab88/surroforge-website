@@ -5,9 +5,11 @@ Schriften kommen über Google Fonts (mit System-Fallback), Bilder liegen unter `
 
 ```
 landing/
-├── index.html      # die komplette Seite
-├── assets/         # die referenzierten CFD-/Koeffizienten-Bilder
-├── vercel.json     # Cache-/Sicherheits-Header (optional)
+├── index.html       # die komplette Landing-Page
+├── datenblatt.html  # eigenständige DIN-A4-Seite (self-contained, Fonts + Bilder eingebettet)
+├── datenblatt.pdf   # daraus vorab gerendertes A4-PDF (das „fertige PDF")
+├── assets/          # die referenzierten CFD-/Koeffizienten-Bilder
+├── vercel.json      # Cache-/Sicherheits-Header + PDF-Header
 └── README.md
 ```
 
@@ -29,13 +31,40 @@ vercel --prod        # Produktions-Deploy
 2. **Root Directory** auf dem Standard (Repo-Wurzel) lassen, Framework Preset = „Other".
 3. Deploy — kein Build-Schritt nötig.
 
-## Als A4-PDF drucken
+## Das A4-Datenblatt (`datenblatt.html` + `datenblatt.pdf`)
 
-Die Seite hat ein eigenes Druck-Layout: im Browser `Strg/Cmd + P` → Ziel „Als PDF sichern",
-Format **A4 hoch**. Statt der dunklen Website erscheint dann eine **helle, einseitige
-Datenblatt-Fassung** (`@media print` / `@page A4` in `index.html`) mit Kennzahlen-Band,
-Funktionsübersicht, den drei CFD-/Surrogat-Diagrammen und Autorenzeile. Ränder auf „Standard"
-lassen; „Hintergrundgrafiken" sind optional (nur die dezenten Kennzahlen-Flächen hängen daran).
+Der komplette Inhalt der Landing-Page als **eigenständige DIN-A4-Seite** — nach dem Deploy erreichbar
+unter `/datenblatt` (bzw. `datenblatt.html`) und direkt aus der Seite verlinkt (Navigation + Fußzeile).
+
+- **`datenblatt.html`** ist **vollständig self-contained**: die Schriften (Sora, IBM Plex Sans/Mono)
+  **und** alle Bilder sind als base64 eingebettet — **keine CDN-/Netzwerk-Abhängigkeit**, funktioniert
+  offline und identisch auf jedem Host. Am Bildschirm ein A4-Blatt auf grauem Hintergrund mit
+  Werkzeugleiste (*PDF herunterladen · Drucken/Als PDF speichern · Zur Website*); beim Drucken exakt
+  **eine A4-Seite** (Werkzeugleiste wird ausgeblendet, `@page A4`).
+- **`datenblatt.pdf`** ist das daraus **vorab gerenderte PDF** (Headless-Chromium, mit den echten
+  Markenschriften) — das „fertige PDF" zum Verschicken. Verifiziert als **genau eine A4-Seite**.
+
+Die dunkle Landing-Page (`index.html`) hat zusätzlich weiterhin ein eigenes `@media print`-Layout —
+`Strg/Cmd + P` dort liefert dasselbe helle Datenblatt.
+
+### `datenblatt.pdf` neu erzeugen
+
+Wenn sich `datenblatt.html` ändert, das PDF mit Headless-Chromium neu rendern (Beispiel):
+
+```bash
+python -m playwright install chromium   # einmalig
+python - <<'PY'
+import asyncio; from playwright.async_api import async_playwright
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch(); pg = await b.new_page()
+        await pg.goto("file://<ABSOLUTER-PFAD>/datenblatt.html", wait_until="load")
+        await pg.evaluate("async () => { await document.fonts.ready; }")
+        await pg.pdf(path="datenblatt.pdf", prefer_css_page_size=True, print_background=True)
+        await b.close()
+asyncio.run(main())
+PY
+```
 
 ## Enthaltenes Beispiel
 
